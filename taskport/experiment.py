@@ -67,6 +67,7 @@ def execute_reference(task_id, initial_state):
 
 
 def trial(manifest,base_url,sid,reward_path,output_dir,runtime_pin=HUB_PIN):
+    if manifest.permitted_interface!='state_api': raise ValueError('state_api interface required by manifest')
     output_dir=Path(output_dir)
     output_dir.mkdir(parents=True,exist_ok=True)
     before=read_state(base_url,sid)
@@ -92,6 +93,7 @@ def run_suite(task_root,output_dir,repeats=3,ports=(5173,5174)):
     records=[]
     clean=[]
     fault_rows=[]
+    benign_rows=[]
     repairs=[]
     for task_id in TASK_LABELS:
         task_dir=Path(task_root)/task_id
@@ -134,6 +136,22 @@ def run_suite(task_root,output_dir,repeats=3,ports=(5173,5174)):
                     row={'kind':'fault','name':name,'task_id':task_id,'repeat':repetition,'port':port,'fault':True,'blocked':not fault_result['preflight']['ok'],'ran':bool(fault_result['trace']),'attributed':correct,'reasons':observed,'counterfactual_reward':forced_score,'trace_comparison':compare_traces(outcome['trace'],forced_trace)}
                     fault_rows.append(row)
                     records.append(row)
+                # Harmless difference: an unrelated label does not alter task intent.
+                benign=copy.deepcopy(state)
+                benign['labels'].append({'id':'taskport-irrelevant','name':'TaskPort irrelevant','color':'#6b7280'})
+                benign_sid=uuid.uuid4().hex
+                inject_trial_state(base,benign_sid,benign)
+                benign_block=trial(manifest,base,benign_sid,reward_path,path/'benign_drift')
+                forced_sid=uuid.uuid4().hex
+                inject_trial_state(base,forced_sid,benign)
+                forced_state,forced_trace=execute_reference(task_id,benign)
+                set_current(base,forced_sid,forced_state)
+                benign_score=run_original_reward(reward_path,base,forced_sid,path/'benign_drift'/'counterfactual')['score']
+                benign_row={'kind':'benign','task_id':task_id,'repeat':repetition,'port':port,'fault':False,
+                    'blocked':not benign_block['preflight']['ok'],'ran':False,'counterfactual_reward':benign_score,
+                    'reasons':benign_block['preflight']['reasons']}
+                benign_rows.append(benign_row)
+                records.append(benign_row)
                 restored_sid=uuid.uuid4().hex
                 inject_trial_state(base,restored_sid,state)
                 repaired=trial(manifest,base,restored_sid,reward_path,path/'repaired')
@@ -141,11 +159,13 @@ def run_suite(task_root,output_dir,repeats=3,ports=(5173,5174)):
                 records.append({'kind':'repair','task_id':task_id,'repeat':repetition,'reward':repaired['reward'],'new_session':True})
             if len(by_port)==2:
                 records.append({'kind':'comparison','task_id':task_id,'repeat':repetition,'trace_comparison':compare_traces(by_port[0]['trace'],by_port[1]['trace']),'reward_match':by_port[0]['reward']==by_port[1]['reward']})
-    metrics=summarize(clean+fault_rows)
+    metrics=summarize(clean+fault_rows+benign_rows)
     report={'scope':'state_api control; no browser actions', 'task_ids':list(TASK_LABELS), 'hub_pin':HUB_PIN, 'repeats':repeats,
         'clean':{'n':len(clean),'full_reward':sum(t['reward']==1.0 for t in clean),'baseline_full_reward':sum(t['baseline']==1.0 for t in clean)},
         'faults':{'n':len(fault_rows),'detection_recall':metrics['detection_recall'],'false_positive_rate':metrics['false_positive_rate'],'avoided_rollouts':metrics['avoided_rollouts'],'coarse_attribution_accuracy':sum(t['attributed'] for t in fault_rows)/len(fault_rows),
                   'counterfactual_failures':sum(t['counterfactual_reward']<1.0 for t in fault_rows),
+                  'benign_blocks':sum(t['blocked'] for t in benign_rows),
+                  'benign_counterfactual_successes':sum(t['counterfactual_reward']==1.0 for t in benign_rows),
                   'traces_with_divergence':sum(t['trace_comparison']['first_divergence'] is not None for t in fault_rows)},
         'repairs':{'attempted':len(repairs),'successful':sum(repairs),'method':'new clean session after fault; no in-place repair'},
         'comparisons':{'equal_rewards':sum(r['reward_match'] for r in records if r['kind']=='comparison'), 'equal_traces':sum(r['trace_comparison']['first_divergence'] is None for r in records if r['kind']=='comparison')},

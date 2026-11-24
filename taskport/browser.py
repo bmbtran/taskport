@@ -55,6 +55,7 @@ def _decide(task_id,visible_text):
 
 
 def browser_trial(manifest,base_url,sid,reward_path,output_dir,runtime_pin=HUB_PIN):
+    if manifest.permitted_interface!='browser': raise ValueError('browser interface required by manifest')
     output_dir=Path(output_dir).resolve()
     output_dir.mkdir(parents=True,exist_ok=True)
     check=preflight(manifest,read_state(base_url,sid)['current_state'],runtime_pin)

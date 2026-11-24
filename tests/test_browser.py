@@ -54,7 +54,7 @@ class BrowserTests(unittest.TestCase):
                         url=f'http://127.0.0.1:{port}'
                         sid=uuid.uuid4().hex
                         inject_state(url,sid,state)
-                        outcome=browser_trial(make_manifest(task_id,state),url,sid,task/'reward.py',Path(temp))
+                        outcome=browser_trial(replace(make_manifest(task_id,state),permitted_interface='browser'),url,sid,task/'reward.py',Path(temp))
                         self.__class__.results.append({'task_id':task_id,'repetition':repetition,'port':port,'reward':outcome['reward'],'trace_length':len(outcome['trace']),'final_emails':outcome['final_emails']})
                         self.assertEqual(outcome['reward'],0.1 if task_id=='2c49ae92-7006-5de3-a938-b3c2af582948' else 1.0,outcome)
                         if task_id=='2c49ae92-7006-5de3-a938-b3c2af582948':
@@ -67,7 +67,7 @@ class BrowserTests(unittest.TestCase):
         task=ROOT/'external/tasks'/task_id
         state=extract_initial_state((task/'initial_setup.py').read_text())
         base='http://127.0.0.1:5175'
-        manifest=replace(make_manifest(task_id,state),environment_pin=PATCH_PIN)
+        manifest=replace(make_manifest(task_id,state),environment_pin=PATCH_PIN,permitted_interface='browser')
         for repetition in range(3):
             with self.subTest(repetition=repetition),tempfile.TemporaryDirectory() as temp:
                 sid=uuid.uuid4().hex

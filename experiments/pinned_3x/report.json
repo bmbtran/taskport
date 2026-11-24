@@ -10,10 +10,12 @@
   },
   "faults": {
     "avoided_rollouts": 18,
+    "benign_blocks": 9,
+    "benign_counterfactual_successes": 9,
     "coarse_attribution_accuracy": 1.0,
     "counterfactual_failures": 18,
     "detection_recall": 1.0,
-    "false_positive_rate": 0.0,
+    "false_positive_rate": 0.3333333333333333,
     "n": 18,
     "traces_with_divergence": 18
   },

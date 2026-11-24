@@ -1,6 +1,6 @@
 # TaskPort
 
-TaskPort probes the portability of externally defined CUA-Gym Gmail tasks between two independently initialized mock app processes. The implemented experiment executes a deterministic **state-interface control**. It does not drive a browser, and its numbers are **not CUA-agent success rates**.
+TaskPort tests whether externally defined CUA-Gym tasks survive transfer between independently initialized Gmail mock runtimes. It includes two explicitly different execution modes: a state-interface control and visible browser actions. A third, versioned runtime tests a one-line repair for an upstream browser/reward incompatibility. The browser script is deterministic; these are **not model-agent success rates**.
 
 ## Reproduce
 
@@ -12,22 +12,20 @@ python -m unittest discover -s tests -v
 python -m taskport.cli --repeats 3 --out experiments/reproduction
 ```
 
-The bootstrap pins CUA-Gym-Hub to commit `53205689c3d88078c1375f76466d5bd799478828` and verifies the task archive SHA-256 `2198e335a8670297cad10405e58b06f3ee7acd8cceaf2d572a5c005e3736f79e`. It installs the three selected external task bundles into `.cache/external/tasks` and creates separate runtime directories. Source and app dependencies remain outside git.
+`bootstrap.sh` pins CUA-Gym-Hub to commit `53205689c3d88078c1375f76466d5bd799478828` and verifies the task archive SHA-256 `2198e335a8670297cad10405e58b06f3ee7acd8cceaf2d572a5c005e3736f79e`. It installs the three selected external task bundles into `.cache/external/tasks`, creates reference and target runtime directories, and applies a narrowly scoped archive patch in a third directory. Source and npm dependencies remain outside git.
 
-## Experiment
+For browser tests, install Python Playwright and its Chromium browser in a browser-capable environment, then run `TASKPORT_BROWSER=1 python -m unittest discover -s tests -v`. GitHub Actions performs this and publishes `browser-study` trial artifacts. This local execution sandbox denies Chromium's process socket, so its default unit run skips the two browser tests. The published [browser results](experiments/browser_ci/report.json) and [raw trials](experiments/browser_ci/trials.jsonl) came from a successful GitHub Actions run.
 
-Three original task instructions and `reward.py` files are used unchanged in meaning. Task setup scripts declare literal initial states; TaskPort parses those literals with `ast.literal_eval` instead of running their browser-launch side effects. Every episode gets a fresh session ID. An exact state digest and runtime pin form the preflight contract. A task-specific deterministic control changes the Gmail mock through its privileged state endpoint, and the original reward script independently reads the resulting state. The reference and target processes have separate current-state storage.
+## What each stage measures
 
-The two injected harmful faults remove a different qualifying email from each task's initial state. A preflight-blocked run is paired with a separate research-only forced run; the upstream reward confirms the failure and its trace is compared with a clean trace. A repair result means a **new clean session** passes again. The version mismatch unit test checks only declared metadata, not an actual code upgrade.
+1. **External task contract:** read `task.json`; parse a literal state from the task's setup code without launching its shared `/tmp` browser; record task instruction, initial digest, source hashes, application pin, and permitted interface.
+2. **Preflight:** reject missing required state or mismatched version before execution. The state control also tests two harmful missing-email faults and a harmless added-label change against the original reward.
+3. **Execution:** the state control uses the mock's privileged `/post` API; the browser runner reads rendered sender/subject/snippet text and clicks label, star, important, and archive controls. Their manifests mark the two interfaces separately.
+4. **Independent verification:** invoke the upstream `reward.py` with a private session file after each trial; compare state-operation or browser-action traces across runs.
+5. **Repair validation:** the unmodified UI archives to `all-mail`, whereas one upstream reward demands `archive`. A third runtime changes only that UI archive transition and runs the same task and original reward again.
 
-See [experiment results](experiments/pinned_3x/report.json), [trial evidence](experiments/pinned_3x/trials.jsonl), [findings](docs/RESULTS.md), [architecture decisions](docs/ADR.md), [research sources](docs/RESEARCH.md), and [failures and rejected options](docs/FAILURES.md).
-
-## Architecture
-
-`bootstrap.sh` pins external bytes → `benchmark.py` extracts state and invokes original reward → `core.py` defines the versioned contract, validator, trace comparator, and metrics → `experiment.py` executes selected tasks, counterfactual faults, and revalidation → `cli.py` owns two independent local server lifecycles and writes JSON evidence.
-
-The test suite includes contract, parser safety, runtime isolation, original-reward baseline, six full-reward task/runtime cases, preflight block, and repeated fault experiment assertions. Each trial writes an `outcome.json`; top-level manifests, trials, and summary remain tracked. The raw per-trial verifier copies and runtime files are ignored.
+See [state experiment results](experiments/pinned_3x/report.json), [browser results](experiments/browser_ci/report.json), [architecture decisions](docs/ADR.md), [research sources](docs/RESEARCH.md), [findings](docs/RESULTS.md), and [failed attempts](docs/FAILURES.md).
 
 ## Limits
 
-The reference control reads structured state and writes `/post` directly, so it bypasses UI behavior and cannot establish browser action portability. Three tasks from one Gmail mock were selected for feasibility, without random sampling. Both runtimes use the same pinned application code; their differences are controlled task-state changes. Exact digest preflight rejects benign state differences too, though this sample contains no benign drift. Trace comparison points to the first differing operation; it does not prove a causal root cause. See the ADR for the work needed before claiming CUA portability.
+Three purposively selected tasks from one mock app do not estimate general task portability. The browser runner follows a deterministic task-specific policy using visible rows; no model agent chooses actions. Two baseline processes use identical pinned app code; the repaired third process is the controlled code-version difference. Exact-state preflight detects the missing-email faults but blocks benign added-label states too. First trace divergence identifies a symptom, not a proven root cause. A repair success means the original reward passed in a fresh session of the patched app; it does not automatically migrate an in-progress session.

@@ -1,0 +1,9 @@
+{
+  "interface": "browser",
+  "repeats": 3,
+  "runs": 21,
+  "unpatched_full_rewards": 12,
+  "unpatched_runs": 18,
+  "archive_failures": 6,
+  "patched_archive_successes": 3
+}

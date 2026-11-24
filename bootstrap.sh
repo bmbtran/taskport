@@ -34,4 +34,4 @@ cp -a "$CACHE_DIR/upstream-hub/websites/gmail_mock/." "$CACHE_DIR/external/gmail
 rm -rf "$CACHE_DIR/upstream-hub/websites/gmail_mock/.mock-states" "$CACHE_DIR/external/gmail_target/.mock-states" "$CACHE_DIR/external/gmail_repaired/.mock-states"
 rm -rf "$CACHE_DIR/upstream-hub/websites/gmail_mock/.mock-files" "$CACHE_DIR/external/gmail_target/.mock-files" "$CACHE_DIR/external/gmail_repaired/.mock-files"
 python -m pip install -q requests
-printf 'Pinned external tasks and two independent Gmail runtime directories ready.\n'
+printf 'Pinned external tasks and three Gmail runtime directories ready (reference, target, repaired).\n'

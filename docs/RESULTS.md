@@ -1,18 +1,34 @@
-# Measured results (pinned_3x)
+# Findings
 
-Command: `python -m taskport.cli --repeats 3 --out experiments/pinned_3x` after `./bootstrap.sh`. Three external tasks, two processes, three repeats each, with fresh session IDs and the original upstream reward. The raw sample and hashes are in the neighboring JSON files.
+## State-interface control
 
-| Measurement | Observation | Meaning |
-| --- | ---: | --- |
-| Clean task/runtime trials | 18 | 3 tasks × 2 runtimes × 3 repeats |
-| Clean full rewards | 18/18 | Original reward scored 1.0 after state-interface control |
-| Untouched full rewards | 0/18 | Original reward was below 1.0 before control |
-| Harmful state faults | 18 | First or second qualifying email removed in target trial |
-| Preflight detected faults | 18/18 | Exact state digest changed |
-| False positives on clean trials | 0/18 | Only sampled pristine states considered negative |
-| Forced counterfactual failures | 18/18 | On separate trials the upstream reward remained below 1.0 |
-| Differential trace divergences | 18/18 | First different state operation identified |
-| Revalidation after clean reset | 9/9 | New session passed after restoring original task state |
-| Matched reference/target clean reward and trace | 9/9 | Same application bytes, different process and state directory |
+Command: `python -m taskport.cli --repeats 3 --out experiments/pinned_3x`. Three external tasks, two isolated app processes, three repeats each. See the [summary](../experiments/pinned_3x/report.json), [trial records](../experiments/pinned_3x/trials.jsonl), and versioned manifests in the same directory.
 
-This establishes a reliable *state-interface control* under two process instances and the selected fault injections. It does not measure human-like UI action portability, actual code-version drift, agent success, generalization to other apps, or ability to repair a broken existing state. Exact-state preflight can reject harmless changes, which are absent from the sampled negatives; the reported 0% false-positive rate is limited to pristine negative controls. The first trace divergence is a useful symptom locator; attributing the injected cause comes from the experimental ground truth and state comparison.
+| Measurement | Observation |
+| --- | ---: |
+| Clean full rewards after privileged state control | 18/18 |
+| Untouched full rewards | 0/18 |
+| Harmful missing-email faults blocked before rollout | 18/18 |
+| Forced harmful counterfactuals below full reward | 18/18 |
+| Differential trace divergences on harmful faults | 18/18 |
+| Benign unrelated-label states blocked | 9/9 |
+| Benign forced counterfactuals with full reward | 9/9 |
+| False-positive rate across clean and benign negative controls | 9/27 = 33.3% |
+| Fresh-session revalidations after restoration | 9/9 |
+| Matched clean rewards and traces across two processes | 9/9 |
+
+The exact initial-state digest is effective on these harmful mutations and overly strict on the measured benign ones. `18 avoided rollouts` refers to blocked harmful trials whose separately forced counterparts earned less than full reward; it is not a measurement of saved wall-clock time.
+
+## Visible-browser experiment
+
+GitHub Actions run `45360880284`, commit `faf33a2`, installed Chromium and ran the visible-UI integration tests. See the [browser summary](../experiments/browser_ci/report.json) and [21 raw trial records](../experiments/browser_ci/trials.jsonl).
+
+| Task | Unmodified reference and target | Repaired runtime |
+| --- | ---: | ---: |
+| Urgent labeling, star, importance | 6/6 full reward | Not tested |
+| Project labeling and archive | 0/6 full reward; every run scored 0.1 | 3/3 full reward |
+| Client label creation and assignment | 6/6 full reward | Not tested |
+
+The project task failed because the unmodified UI archived to `all-mail` while its upstream verifier expected `archive`. The one-line patched runtime changed that representation and passed without modifying the benchmark reward. The failure is a concrete task portability/compatibility issue, not an agent planning failure.
+
+The browser runner is deterministic and these results cover one app, three selected tasks, and three repetitions. They do not estimate model-agent success or guarantee the patch generalizes. The labeled browser actions and original reward provide stronger evidence than the state-interface control for actual UI behavior.
