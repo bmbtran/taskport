@@ -41,7 +41,13 @@ class BrowserTests(unittest.TestCase):
                 'unpatched_runs':sum(r['port'] in (5173,5174) for r in records),
                 'archive_failures':sum(r['reward']<1.0 for r in records if r['task_id']=='2c49ae92-7006-5de3-a938-b3c2af582948' and r['port'] in (5173,5174)),
                 'patched_archive_successes':sum(r['reward']==1.0 for r in records if r['port']==5175)}
+        project='2c49ae92-7006-5de3-a938-b3c2af582948'
+        pairs=[(next((r for r in records if r['task_id']==project and r['repetition']==i and r['port']==5173),None),
+                next((r for r in records if r['task_id']==project and r['repetition']==i and r['port']==5175),None)) for i in range(3)]
+        report['same_actions_different_final_state']=sum(a is not None and b is not None and a['trace']==b['trace'] and a['final_emails']!=b['final_emails'] for a,b in pairs)
         (out/'report.json').write_text(json.dumps(report,indent=2))
+        if len(records)==21:
+            assert report['same_actions_different_final_state']==3,report
         (out/'trials.jsonl').write_text(''.join(json.dumps(r)+'\n' for r in records))
 
     def test_ui_actions_satisfy_original_rewards_on_both_runtimes(self):
@@ -55,7 +61,7 @@ class BrowserTests(unittest.TestCase):
                         sid=uuid.uuid4().hex
                         inject_state(url,sid,state)
                         outcome=browser_trial(replace(make_manifest(task_id,state),permitted_interface='browser'),url,sid,task/'reward.py',Path(temp))
-                        self.__class__.results.append({'task_id':task_id,'repetition':repetition,'port':port,'reward':outcome['reward'],'trace_length':len(outcome['trace']),'final_emails':outcome['final_emails']})
+                        self.__class__.results.append({'task_id':task_id,'repetition':repetition,'port':port,'reward':outcome['reward'],'trace_length':len(outcome['trace']),'trace':outcome['trace'],'final_emails':outcome['final_emails']})
                         self.assertEqual(outcome['reward'],0.1 if task_id=='2c49ae92-7006-5de3-a938-b3c2af582948' else 1.0,outcome)
                         if task_id=='2c49ae92-7006-5de3-a938-b3c2af582948':
                             self.assertTrue(all(e['folder']=='all-mail' for e in outcome['final_emails'] if e['subject']!='Lunch tomorrow?'))
@@ -73,7 +79,7 @@ class BrowserTests(unittest.TestCase):
                 sid=uuid.uuid4().hex
                 inject_state(base,sid,state)
                 outcome=browser_trial(manifest,base,sid,task/'reward.py',Path(temp),runtime_pin=PATCH_PIN)
-                self.__class__.results.append({'task_id':task_id,'repetition':repetition,'port':5175,'reward':outcome['reward'],'trace_length':len(outcome['trace']),'final_emails':outcome['final_emails']})
+                self.__class__.results.append({'task_id':task_id,'repetition':repetition,'port':5175,'reward':outcome['reward'],'trace_length':len(outcome['trace']),'trace':outcome['trace'],'final_emails':outcome['final_emails']})
                 self.assertEqual(outcome['reward'],1.0,outcome)
                 self.assertTrue(all(e['folder']=='archive' for e in outcome['final_emails'] if e['subject']!='Lunch tomorrow?'))
 
