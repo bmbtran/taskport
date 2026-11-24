@@ -28,7 +28,10 @@ npm ci --prefix "$CACHE_DIR/upstream-hub/websites/gmail_mock" --ignore-scripts -
 mkdir -p "$CACHE_DIR/external/gmail_target"
 cp -a "$CACHE_DIR/upstream-hub/websites/gmail_mock/." "$CACHE_DIR/external/gmail_target/"
 cp -a "$CACHE_DIR/upstream-hub/shared" "$CACHE_DIR/shared"
-rm -rf "$CACHE_DIR/upstream-hub/websites/gmail_mock/.mock-states" "$CACHE_DIR/external/gmail_target/.mock-states"
-rm -rf "$CACHE_DIR/upstream-hub/websites/gmail_mock/.mock-files" "$CACHE_DIR/external/gmail_target/.mock-files"
+mkdir -p "$CACHE_DIR/external/gmail_repaired"
+cp -a "$CACHE_DIR/upstream-hub/websites/gmail_mock/." "$CACHE_DIR/external/gmail_repaired/"
+(cd "$PROJECT_DIR" && python -c "from taskport.repair import patch_file; patch_file('${CACHE_DIR}/external/gmail_repaired/src/context/StoreContext.jsx')")
+rm -rf "$CACHE_DIR/upstream-hub/websites/gmail_mock/.mock-states" "$CACHE_DIR/external/gmail_target/.mock-states" "$CACHE_DIR/external/gmail_repaired/.mock-states"
+rm -rf "$CACHE_DIR/upstream-hub/websites/gmail_mock/.mock-files" "$CACHE_DIR/external/gmail_target/.mock-files" "$CACHE_DIR/external/gmail_repaired/.mock-files"
 python -m pip install -q requests
 printf 'Pinned external tasks and two independent Gmail runtime directories ready.\n'

@@ -54,10 +54,10 @@ def _decide(task_id,visible_text):
     raise ValueError('unsupported task')
 
 
-def browser_trial(manifest,base_url,sid,reward_path,output_dir):
+def browser_trial(manifest,base_url,sid,reward_path,output_dir,runtime_pin=HUB_PIN):
     output_dir=Path(output_dir).resolve()
     output_dir.mkdir(parents=True,exist_ok=True)
-    check=preflight(manifest,read_state(base_url,sid)['current_state'],HUB_PIN)
+    check=preflight(manifest,read_state(base_url,sid)['current_state'],runtime_pin)
     result={'task_id':manifest.task_id,'sid':sid,'preflight':asdict(check),'trace':[],'reward':None,'interface':'browser'}
     if not check.ok:
         (output_dir/'outcome.json').write_text(json.dumps(result,indent=2))
@@ -96,6 +96,7 @@ def browser_trial(manifest,base_url,sid,reward_path,output_dir):
             page.screenshot(path=str(output_dir/'final.png'),full_page=True)
             page.wait_for_timeout(600)
             result['reward']=run_original_reward(reward_path,base_url,sid,output_dir/'verifier')['score']
+            result['final_emails']=[{'subject':e['subject'],'labels':e['labels'],'folder':e['folder']} for e in read_state(base_url,sid)['current_state']['emails']]
         finally:
             browser.close()
     (output_dir/'outcome.json').write_text(json.dumps(result,indent=2))
