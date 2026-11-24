@@ -1,0 +1,17 @@
+{
+  "task_id": "6ae03946-3ada-5a5e-a526-e3283ac528d2",
+  "app": "gmail_mock",
+  "environment_pin": "53205689c3d88078c1375f76466d5bd799478828",
+  "initial_digest": "eb777fab386c0908590607f46924fcdd5592e4aea0ce6e005cec7f75325227d3",
+  "required_keys": [
+    "emails",
+    "labels"
+  ],
+  "required_label_ids": [],
+  "permitted_interface": "state_api",
+  "schema_version": 1,
+  "instruction": "Create three new labels: 'Client-Alpha' (red), 'Client-Beta' (blue), and 'Client-Gamma' (green). Then categorize all inbox emails by which client they relate to based on the email content or sender domain. Apply the appropriate client label. Emails that don't relate to any client should get no label change.",
+  "reward_sha256": "c646bbc44523ba464a0541dc67bc93b633d4efa07dfd6b37e97133f42b5843ea",
+  "setup_sha256": "30114e7e93770937f7be8d07810eba9d650edc31c85c23dece49de268734689c",
+  "success_criterion": "original_reward == 1.0"
+}

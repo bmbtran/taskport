@@ -9,7 +9,7 @@ import uuid
 from taskport.benchmark import extract_initial_state, inject_state, run_original_reward, read_state
 from taskport.experiment import execute_reference, make_manifest, trial
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[1] / '.cache'
 TASKS = ('378d436a-433a-51f8-a13f-92ecf1415e9f', '2c49ae92-7006-5de3-a938-b3c2af582948', '6ae03946-3ada-5a5e-a526-e3283ac528d2')
 
 class ExperimentTests(unittest.TestCase):
@@ -78,5 +78,7 @@ class ExperimentTests(unittest.TestCase):
             self.assertEqual(report['faults']['false_positive_rate'],0.0)
             self.assertEqual(report['faults']['avoided_rollouts'],12)
             self.assertEqual(report['repairs']['successful'],6)
+            self.assertEqual(report['faults']['counterfactual_failures'],12)
+            self.assertEqual(report['faults']['traces_with_divergence'],12)
             self.assertTrue((Path(temp)/'report.json').exists())
             self.assertTrue((Path(temp)/'trials.jsonl').exists())

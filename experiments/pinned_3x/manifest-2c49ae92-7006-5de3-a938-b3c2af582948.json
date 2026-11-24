@@ -1,0 +1,21 @@
+{
+  "task_id": "2c49ae92-7006-5de3-a938-b3c2af582948",
+  "app": "gmail_mock",
+  "environment_pin": "53205689c3d88078c1375f76466d5bd799478828",
+  "initial_digest": "74541b0251f938a8be8be0c01a1b00e319cd368ff5479057560924c3be746bb6",
+  "required_keys": [
+    "emails",
+    "labels"
+  ],
+  "required_label_ids": [
+    "l1",
+    "l3",
+    "l4"
+  ],
+  "permitted_interface": "state_api",
+  "schema_version": 1,
+  "instruction": "Go through my inbox and organize all emails into labels by project. Emails mentioning 'Phoenix' go under Work label, emails mentioning 'vacation' or 'trip' go under Travel label, and emails mentioning 'invoice' or 'payment' go under Finance label. Then archive everything that got a label applied.",
+  "reward_sha256": "fb3d56acc316711bae8489360e559226c911bdb997e7b2b6eb94d573169b2191",
+  "setup_sha256": "9f5fc8d9862819f39af56ce75ba3c852358d86cd868475642cb212bdce68de1a",
+  "success_criterion": "original_reward == 1.0"
+}

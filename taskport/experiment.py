@@ -114,17 +114,24 @@ def run_suite(task_root,output_dir,repeats=3,ports=(5173,5174)):
                 records.append({'kind':'clean',**clean[-1]})
                 if port!=ports[-1]:continue
                 faults=[]
-                damaged=copy.deepcopy(state)
-                damaged['emails']=damaged['emails'][1:]
-                faults.append(('state_drift',damaged,HUB_PIN))
-                faults.append(('version_mismatch',state,'injected-wrong-version'))
+                for index in (0,1):
+                    damaged=copy.deepcopy(state)
+                    damaged['emails'].pop(index)
+                    faults.append((f'missing_email_{index+1}',damaged,HUB_PIN))
                 for name,altered,pin in faults:
                     fault_sid=uuid.uuid4().hex
                     inject_trial_state(base,fault_sid,altered)
                     fault_result=trial(manifest,base,fault_sid,reward_path,path/name,runtime_pin=pin)
                     observed=fault_result['preflight']['reasons']
-                    correct=(('state_digest_mismatch' in observed) if name=='state_drift' else ('environment_version_mismatch' in observed))
-                    row={'kind':'fault','name':name,'task_id':task_id,'repeat':repetition,'port':port,'fault':True,'blocked':not fault_result['preflight']['ok'],'ran':bool(fault_result['trace']),'attributed':correct,'reasons':observed,'trace_comparison':compare_traces(outcome['trace'],fault_result['trace'])}
+                    correct='state_digest_mismatch' in observed
+                    # Independent research-only counterfactual: a new session runs despite the
+                    # preflight block, then the original upstream reward measures the failure.
+                    forced_sid=uuid.uuid4().hex
+                    inject_trial_state(base,forced_sid,altered)
+                    forced_state,forced_trace=execute_reference(task_id,altered)
+                    set_current(base,forced_sid,forced_state)
+                    forced_score=run_original_reward(reward_path,base,forced_sid,path/name/'counterfactual')['score']
+                    row={'kind':'fault','name':name,'task_id':task_id,'repeat':repetition,'port':port,'fault':True,'blocked':not fault_result['preflight']['ok'],'ran':bool(fault_result['trace']),'attributed':correct,'reasons':observed,'counterfactual_reward':forced_score,'trace_comparison':compare_traces(outcome['trace'],forced_trace)}
                     fault_rows.append(row)
                     records.append(row)
                 restored_sid=uuid.uuid4().hex
@@ -137,10 +144,12 @@ def run_suite(task_root,output_dir,repeats=3,ports=(5173,5174)):
     metrics=summarize(clean+fault_rows)
     report={'scope':'state_api control; no browser actions', 'task_ids':list(TASK_LABELS), 'hub_pin':HUB_PIN, 'repeats':repeats,
         'clean':{'n':len(clean),'full_reward':sum(t['reward']==1.0 for t in clean),'baseline_full_reward':sum(t['baseline']==1.0 for t in clean)},
-        'faults':{'n':len(fault_rows),'detection_recall':metrics['detection_recall'],'false_positive_rate':metrics['false_positive_rate'],'avoided_rollouts':metrics['avoided_rollouts'],'coarse_attribution_accuracy':sum(t['attributed'] for t in fault_rows)/len(fault_rows)},
+        'faults':{'n':len(fault_rows),'detection_recall':metrics['detection_recall'],'false_positive_rate':metrics['false_positive_rate'],'avoided_rollouts':metrics['avoided_rollouts'],'coarse_attribution_accuracy':sum(t['attributed'] for t in fault_rows)/len(fault_rows),
+                  'counterfactual_failures':sum(t['counterfactual_reward']<1.0 for t in fault_rows),
+                  'traces_with_divergence':sum(t['trace_comparison']['first_divergence'] is not None for t in fault_rows)},
         'repairs':{'attempted':len(repairs),'successful':sum(repairs),'method':'new clean session after fault; no in-place repair'},
         'comparisons':{'equal_rewards':sum(r['reward_match'] for r in records if r['kind']=='comparison'), 'equal_traces':sum(r['trace_comparison']['first_divergence'] is None for r in records if r['kind']=='comparison')},
-        'limitations':['no browser UI execution','version mismatch is injected metadata, not a deployed code change','state updates through privileged mock endpoint','selected tasks only; no statistical generalization']}
+        'limitations':['no browser UI execution','no deployed application code change tested; version mismatch is a contract unit test only','state updates through privileged mock endpoint','selected tasks only; no statistical generalization']}
     (output_dir/'trials.jsonl').write_text(''.join(json.dumps(r,sort_keys=True)+'\n' for r in records))
     (output_dir/'report.json').write_text(json.dumps(report,indent=2,sort_keys=True))
     return report

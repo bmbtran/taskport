@@ -1,0 +1,40 @@
+{
+  "clean": {
+    "baseline_full_reward": 0,
+    "full_reward": 18,
+    "n": 18
+  },
+  "comparisons": {
+    "equal_rewards": 9,
+    "equal_traces": 9
+  },
+  "faults": {
+    "avoided_rollouts": 18,
+    "coarse_attribution_accuracy": 1.0,
+    "counterfactual_failures": 18,
+    "detection_recall": 1.0,
+    "false_positive_rate": 0.0,
+    "n": 18,
+    "traces_with_divergence": 18
+  },
+  "hub_pin": "53205689c3d88078c1375f76466d5bd799478828",
+  "limitations": [
+    "no browser UI execution",
+    "no deployed application code change tested; version mismatch is a contract unit test only",
+    "state updates through privileged mock endpoint",
+    "selected tasks only; no statistical generalization"
+  ],
+  "repairs": {
+    "attempted": 9,
+    "method": "new clean session after fault; no in-place repair",
+    "successful": 9
+  },
+  "repeats": 3,
+  "runtime_source_sha256": "84a555d3bb178e5164aee3ceaaf02e14691fb99d061b86db3a1d650146322c84",
+  "scope": "state_api control; no browser actions",
+  "task_ids": [
+    "378d436a-433a-51f8-a13f-92ecf1415e9f",
+    "2c49ae92-7006-5de3-a938-b3c2af582948",
+    "6ae03946-3ada-5a5e-a526-e3283ac528d2"
+  ]
+}

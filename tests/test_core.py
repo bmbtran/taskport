@@ -47,7 +47,7 @@ import uuid
 class BenchmarkAdapterTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        root = Path(__file__).resolve().parents[2]
+        root = Path(__file__).resolve().parents[1] / '.cache'
         cls.servers = []
         for directory, port in [(root / 'upstream-hub/websites/gmail_mock',5173),(root / 'external/gmail_target',5174)]:
             if not (directory / 'node_modules/vite/bin/vite.js').exists():
@@ -79,18 +79,20 @@ class BenchmarkAdapterTests(unittest.TestCase):
             extract_initial_state('state = load_from_network()')
 
     def test_two_live_runtimes_have_independent_state_and_original_verifier(self):
-        root = Path(__file__).resolve().parents[2]
-        task = root / 'external/tasks/7966bc77-f7d9-5140-ac50-e41d3662baf2'
+        root = Path(__file__).resolve().parents[1] / '.cache'
+        task = root / 'external/tasks/378d436a-433a-51f8-a13f-92ecf1415e9f'
         if not task.exists(): self.skipTest('external benchmark archive not installed')
         state = extract_initial_state((task / 'initial_setup.py').read_text())
         sid = 'taskport-' + uuid.uuid4().hex
         inject_state('http://127.0.0.1:5173', sid, state)
         inject_state('http://127.0.0.1:5174', sid, state)
         changed = copy.deepcopy(state)
-        changed['emails'][0]['labels'] = []
+        changed['emails'][0]['folder'] = 'trash'
         inject_state('http://127.0.0.1:5174', sid, changed)
         self.assertNotEqual(read_state('http://127.0.0.1:5173', sid)['current_state'], read_state('http://127.0.0.1:5174', sid)['current_state'])
         with tempfile.TemporaryDirectory() as directory:
             result = run_original_reward(task / 'reward.py', 'http://127.0.0.1:5173', sid, Path(directory))
             self.assertEqual(result['score'], 0.0)
             self.assertIn('REWARD:',result['stdout'])
+            relative = Path('experiments') / 'test-relative-verifier'
+            self.assertEqual(run_original_reward(task / 'reward.py', 'http://127.0.0.1:5173', sid, relative)['score'], 0.0)

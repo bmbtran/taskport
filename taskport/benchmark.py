@@ -35,7 +35,7 @@ def read_state(base_url, sid):
 
 
 def run_original_reward(reward_path, base_url, sid, directory):
-    directory = Path(directory)
+    directory = Path(directory).resolve()
     directory.mkdir(parents=True, exist_ok=True)
     (directory / 'sid').write_text(sid)
     source = Path(reward_path).read_text()

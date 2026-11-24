@@ -1,0 +1,7 @@
+.cache/
+__pycache__/
+*.pyc
+.pytest_cache/
+experiments/pinned_3x/*/
+experiments/test-relative-verifier/
+experiments/reproduction/
