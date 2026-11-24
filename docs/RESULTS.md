@@ -21,13 +21,15 @@ The exact initial-state digest is effective on these harmful mutations and overl
 
 ## Visible-browser experiment
 
-GitHub Actions run `45360880284`, commit `faf33a2`, installed Chromium and ran the visible-UI integration tests. See the [browser summary](../experiments/browser_ci/report.json) and [21 raw trial records](../experiments/browser_ci/trials.jsonl).
+GitHub Actions run `45362416633`, commit `d9302f7`, installed Chromium and ran the visible-UI integration tests. See the [browser summary](../experiments/browser_ci/report.json) and [21 raw trial records](../experiments/browser_ci/trials.jsonl).
 
 | Task | Unmodified reference and target | Repaired runtime |
 | --- | ---: | ---: |
 | Urgent labeling, star, importance | 6/6 full reward | Not tested |
 | Project labeling and archive | 0/6 full reward; every run scored 0.1 | 3/3 full reward |
 | Client label creation and assignment | 6/6 full reward | Not tested |
+
+Across the three paired project-task repetitions, the unmodified and patched browser traces contained the same actions while their final folder states differed (3/3). The trace comparator therefore needs final-state evidence to diagnose this class of runtime incompatibility. CI ran all 17 tests successfully, including two browser tests with 21 episodes.
 
 The project task failed because the unmodified UI archived to `all-mail` while its upstream verifier expected `archive`. The one-line patched runtime changed that representation and passed without modifying the benchmark reward. The failure is a concrete task portability/compatibility issue, not an agent planning failure.
 

@@ -26,7 +26,7 @@ Decision: a browser script reads only visible sender/subject/snippet rows to cho
 
 ## ADR-007: narrow archive repair
 
-Observation: the pinned Gmail UI's Archive action sets `folder: 'all-mail'`, while external project task `reward.py` checks `folder: 'archive'`. All six browser trials of this task on unmodified runtimes scored 0.1 despite completing six label/archive sequences. Decision: preserve reference and target unchanged; copy the pinned app into a third runtime and replace exactly one archive transition, rejecting the patch if upstream source differs. The original reward scored 1.0 in all three patched browser repetitions. This repairs the benchmark/app contract for this one task and does not prove wider compatibility.
+Observation: the pinned Gmail UI's Archive action sets `folder: 'all-mail'`, while external project task `reward.py` checks `folder: 'archive'`. All six browser trials of this task on unmodified runtimes scored 0.1 despite completing six label/archive sequences. Decision: preserve reference and target unchanged; copy the pinned app into a third runtime and replace exactly one archive transition, rejecting the patch if upstream source differs. The original reward scored 1.0 in all three patched browser repetitions. Paired action traces were identical in all three comparisons while final email states differed. This repairs the benchmark/app contract for this one task and does not prove wider compatibility.
 
 ## ADR-008: excluded infrastructure
 

@@ -5,5 +5,6 @@
   "unpatched_full_rewards": 12,
   "unpatched_runs": 18,
   "archive_failures": 6,
-  "patched_archive_successes": 3
+  "patched_archive_successes": 3,
+  "same_actions_different_final_state": 3
 }

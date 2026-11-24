@@ -24,7 +24,7 @@ For browser tests, install Python Playwright and its Chromium browser in a brows
 4. **Independent verification:** invoke the upstream `reward.py` with a private session file after each trial; compare state-operation or browser-action traces across runs.
 5. **Repair validation:** the unmodified UI archives to `all-mail`, whereas one upstream reward demands `archive`. A third runtime changes only that UI archive transition and runs the same task and original reward again.
 
-See [state experiment results](experiments/pinned_3x/report.json), [browser results](experiments/browser_ci/report.json), [architecture decisions](docs/ADR.md), [research sources](docs/RESEARCH.md), [findings](docs/RESULTS.md), and [failed attempts](docs/FAILURES.md).
+See [state experiment results](experiments/pinned_3x/report.json), [browser results](experiments/browser_ci/report.json), [architecture decisions](docs/ADR.md), [research sources](docs/RESEARCH.md), [findings](docs/RESULTS.md), and [failed attempts](docs/FAILURES.md), and [first-principles tutorial](docs/TUTORIAL.md).
 
 ## Limits
 
