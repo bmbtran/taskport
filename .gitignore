@@ -5,3 +5,4 @@ __pycache__/
 experiments/pinned_3x/*/
 experiments/test-relative-verifier/
 experiments/reproduction/
+experiments/browser_ci/

@@ -20,3 +20,8 @@ jobs:
         env:
           TASKPORT_BROWSER: "1"
       - run: python -m taskport.cli --repeats 3 --out experiments/ci
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-study
+          path: experiments/browser_ci
